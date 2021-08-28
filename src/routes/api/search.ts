@@ -25,17 +25,17 @@ export async function get({ query }) {
 
 	if (searchVersion && searchTerm) {
 		const modifiedURL = `${BASE_URL}search=${searchTerm}&version=${searchVersion}`;
-    const res = await fetch(modifiedURL)
+		const res = await fetch(modifiedURL);
 
-    if(!res.ok) {
-      return {
-        status: res.status,
-        body: {
-          error: 'fetch failed. Bad internet?',
-          data: { searchTerm: query.get('search'), searchVersion: query.get('version') }
-        }
-      }
-    }
+		if (!res.ok) {
+			return {
+				status: res.status,
+				body: {
+					error: 'fetch failed. Bad internet?',
+					data: { searchTerm: query.get('search'), searchVersion: query.get('version') }
+				}
+			};
+		}
 
 		const $ = cheerio.load(await res.text());
 
@@ -57,8 +57,13 @@ export async function get({ query }) {
       h3,
       sup.versenum,
       span.chapternum,
-      a
+      a,
+      div.long-aside
     `).remove();
+
+		$('i').each((i, el) => {
+			$(el).text('*' + $(el).text() + '*');
+		});
 
 		const shortReferenceSelector = $('.passage-table');
 		const referenceSelector = $('.bcv .dropdown-display-text');
@@ -76,16 +81,16 @@ export async function get({ query }) {
 		versesSelector.removeClass('text');
 
 		const mappedVerses = versesSelector.toArray().map((verseNode) => {
-			const [shortBook, chapter, verse,,,secondVerse] = $(verseNode).attr('class').split('-');
-      let toVerse
+			const [shortBook, chapter, verse, , , secondVerse] = $(verseNode).attr('class').split('-');
+			let toVerse;
 
-      if(secondVerse) toVerse = Number(secondVerse)
+			if (secondVerse) toVerse = Number(secondVerse);
 
 			return {
 				book: BOOKS[shortBook] || shortBook,
 				chapter: Number(chapter),
 				verse: Number(verse),
-        toVerse,
+				toVerse,
 				text: sanitize($(verseNode).text())
 			};
 		});

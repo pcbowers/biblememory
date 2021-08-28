@@ -1,5 +1,7 @@
 import * as cheerio from 'cheerio';
 
+const EXCLUDED_VERSIONS = ["MOUNCE"]
+
 export async function get({ query }) {
 	const searchVersion = query.get('version');
 
@@ -55,7 +57,7 @@ export async function get({ query }) {
 				.match(/^(.*)\s\((.*)\).*$/);
 			return { shortVersion, version };
 		})
-		.toArray();
+		.toArray().filter(version => !EXCLUDED_VERSIONS.includes(version.shortVersion));
 
 	return {
 		status: 200,
