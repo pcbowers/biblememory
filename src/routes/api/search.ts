@@ -76,11 +76,16 @@ export async function get({ query }) {
 		versesSelector.removeClass('text');
 
 		const mappedVerses = versesSelector.toArray().map((verseNode) => {
-			const [shortBook, chapter, verse] = $(verseNode).attr('class').split('-');
+			const [shortBook, chapter, verse,,,secondVerse] = $(verseNode).attr('class').split('-');
+      let toVerse
+
+      if(secondVerse) toVerse = Number(secondVerse)
+
 			return {
 				book: BOOKS[shortBook] || shortBook,
 				chapter: Number(chapter),
 				verse: Number(verse),
+        toVerse,
 				text: sanitize($(verseNode).text())
 			};
 		});
