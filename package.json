@@ -27,7 +27,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"jsdom": "^17.0.0",
+		"cheerio": "^1.0.0-rc.10",
 		"unidecode": "^0.1.8"
 	}
 }
