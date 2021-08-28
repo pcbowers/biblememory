@@ -5,6 +5,7 @@ import BOOKS from './_books';
 const BASE_URL = `https://www.biblegateway.com/passage/?`;
 
 const sanitize = (str) => {
+	if (Array.isArray(str)) return str.map((st) => unidecode(st).replace(/\s+/g, ' ').trim());
 	return unidecode(str).replace(/\s+/g, ' ').trim();
 };
 
@@ -54,11 +55,11 @@ export async function get({ query }) {
 		const versesSelector = $('span.text:not([class="text"])');
 		const contentSelector = $('.passage-content');
 
-		const shortReference = shortReferenceSelector.data('osis');
-		const reference = referenceSelector.text();
-		const shortVersion = shortVersionSelector.data('translation');
-		const version = versionSelector.text();
-		const content = contentSelector.text();
+		const shortReference = shortReferenceSelector.map((id, el) => $(el).data('osis')).toArray();
+		const reference = referenceSelector.map((id, el) => $(el).text()).toArray();
+		const shortVersion = shortVersionSelector.map((id, el) => $(el).data('translation')).toArray();
+		const version = versionSelector.map((id, el) => $(el).text()).toArray();
+		const content = contentSelector.map((id, el) => $(el).text()).toArray();
 
 		versesSelector.removeClass('text');
 
@@ -89,11 +90,11 @@ export async function get({ query }) {
 			body: {
 				searchTerm: decodeURIComponent(searchTerm),
 				searchVersion: decodeURIComponent(searchVersion),
-				shortReference: sanitize(shortReference),
-				reference: sanitize(reference),
-				shortVersion: sanitize(shortVersion),
-				version: sanitize(version),
-				content: sanitize(content),
+				shortReferences: sanitize(shortReference),
+				references: sanitize(reference),
+				shortVersions: sanitize(shortVersion),
+				versions: sanitize(version),
+				contents: sanitize(content),
 				verses
 			}
 		};
