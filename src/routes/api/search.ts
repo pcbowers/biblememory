@@ -25,7 +25,19 @@ export async function get({ query }) {
 
 	if (searchVersion && searchTerm) {
 		const modifiedURL = `${BASE_URL}search=${searchTerm}&version=${searchVersion}`;
-		const $ = cheerio.load(await (await fetch(modifiedURL)).text());
+    const res = await fetch(modifiedURL)
+
+    if(!res.ok) {
+      return {
+        status: res.status,
+        body: {
+          error: 'fetch failed. Bad internet?',
+          data: { searchTerm: query.get('search'), searchVersion: query.get('version') }
+        }
+      }
+    }
+
+		const $ = cheerio.load(await res.text());
 
 		if (!$('.bcv').length) {
 			return {
