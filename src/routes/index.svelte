@@ -22,10 +22,20 @@
 	export let versions: { version: string; shortVersion: string }[];
 	let search = 'John 3:16';
 	let version = 'ESV';
-	let returnValue = '';
+	let returnValue: any = 'Search for a Scripture and Select a Version.';
 
 	const submitSearch = async () => {
-		returnValue = await (await fetch(`/api/search?search=${search}&version=${version}`)).json();
+		returnValue = 'loading...';
+		try {
+			const res = await fetch(`/api/search?search=${search}&version=${version}`);
+			if (!res.ok) throw res.status;
+			returnValue = await res.json();
+		} catch (status) {
+			returnValue = {
+				status,
+				error: 'search failed.'
+			};
+		}
 	};
 </script>
 
