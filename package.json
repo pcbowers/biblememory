@@ -38,6 +38,7 @@
 		"cheerio": "^1.0.0-rc.10",
 		"daisyui": "^1.14.0",
 		"marked": "^3.0.2",
+		"svelte-highlight": "^3.2.0",
 		"unidecode": "^0.1.8"
 	}
 }

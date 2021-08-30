@@ -6,8 +6,8 @@ const BASE_URL = `https://www.biblegateway.com/passage/?`;
 
 const sanitize = (str) => {
 	// .replace(/\s+/g, ' ')
-	if (Array.isArray(str)) return str.map((st) => unidecode(st).trim());
-	return unidecode(str).trim();
+	if (Array.isArray(str)) return str.map((st) => unidecode(st.replace(/¶/g, '')).trim());
+	return unidecode(str.replace(/¶/g, '')).trim();
 };
 
 const versesEqual = (prevVerse, curVerse) => {
@@ -86,7 +86,30 @@ export async function get({ query }) {
     const shortReferences = [];
 
 		contentSelector.each((id, el) => {
-			const versesSelector = $('span.text:not([class="text"])', $(el));
+			// Sanitize Elements
+      $('i', $(el)).each((i, el) => {
+        $(el).text('*' + $(el).text() + '*');
+      });
+
+      $('b', $(el)).each((i, el) => {
+        $(el).text('**' + $(el).text() + '**');
+      });
+
+      $('.speaker').closest('p').addClass('speakerP')
+
+      const allParagraphs = $('p', $(el))
+
+      allParagraphs.each((id, el) => {
+        if(!$(el).hasClass('speakerP')) return
+        if(!allParagraphs.eq(id + 1).length) return
+
+        if(allParagraphs.eq(id + 1).hasClass('first-line-none'))
+          allParagraphs.eq(id + 1).text('<br />' + allParagraphs.eq(id + 1).text())
+        else allParagraphs.eq(id + 1).addClass('speakerP')
+      })
+
+      // Select Verses
+      const versesSelector = $('span.text:not([class="text"])', $(el));
 			versesSelector.removeClass('text');
 
 			const mappedVerses = versesSelector.toArray().map((verseNode) => {
@@ -120,27 +143,7 @@ export async function get({ query }) {
       verses.push(parsedVerses)
       shortReferences.push(calculateShortReference(parsedVerses))
 
-      $('i', $(el)).each((i, el) => {
-        $(el).text('*' + $(el).text() + '*');
-      });
-
-      $('b', $(el)).each((i, el) => {
-        $(el).text('**' + $(el).text() + '**');
-      });
-
-      $('.speaker').closest('p').addClass('speakerP')
-
-      const allParagraphs = $('p', $(el))
-
-      allParagraphs.each((id, el) => {
-        if(!$(el).hasClass('speakerP')) return
-        if(!allParagraphs.eq(id + 1).length) return
-
-        if(allParagraphs.eq(id + 1).hasClass('first-line-none'))
-          allParagraphs.eq(id + 1).text('<br />' + allParagraphs.eq(id + 1).text())
-        else allParagraphs.eq(id + 1).addClass('speakerP')
-      })
-
+      // Select Content
       $('p', $(el)).each((i, el) => {
         $(el).text($(el).text().trim() + '\n\n');
       });

@@ -19,21 +19,26 @@
 </script>
 
 <script type="ts">
+	import Memorizer from '../components/Memorizer.svelte';
 	import marked from 'marked';
 	export let versions: { version: string; shortVersion: string }[];
-	let search = 'John 3';
-	let version = 'VOICE';
-	let returnValue:
-		| string
-		| {
-				reference: string;
-				referenceShort: string;
-				version: string;
-				versionShort: string;
-				content: string;
-		  }[]
-		| { status: number; body: { [key: string]: string } } =
-		'Search for a Scripture and Select a Version.';
+
+	let search = 'Romans 1:1-12';
+	let version = 'ESV';
+	let error = 'Search for a Scripture and Select a Version.';
+	let data: {
+		reference: string;
+		referenceShort: string;
+		version: string;
+		versionShort: string;
+		content: string;
+		verses: {
+			book: string;
+			chapter: string;
+			verse: string;
+			text: string;
+		}[];
+	}[];
 
 	const timeout = (ms, promise): Promise<Response> => {
 		return new Promise<Response>((resolve, reject) => {
@@ -57,7 +62,7 @@
 	};
 
 	const submitSearch = async () => {
-		returnValue = 'loading...';
+		error = 'Loading...';
 		try {
 			const res = await timeout(5000, fetch(`/api/search?search=${search}&version=${version}`));
 			if (!res.ok) {
@@ -69,20 +74,24 @@
 				}
 				throw { status: res.status, body };
 			}
-			returnValue = await res.json();
+			data = await res.json();
+			error = null;
 		} catch (res) {
-			returnValue = {
-				status: res.status,
-				body: res.body
-			};
+			error = JSON.stringify(res, null, 2);
+			data = null;
 		}
-		console.log(returnValue);
+
+		console.log(data);
 	};
 </script>
 
-<div class="hero min-h-screen bg-base-200">
+<svelte:head>
+	<title>Bible Memory</title>
+</svelte:head>
+
+<div class="hero min-h-screen">
 	<div class="text-center hero-content">
-		<div class="max-w-lg">
+		<div class="max-w-[65ch]">
 			<div class="flex flex-row justify-center gap-4 flex-wrap">
 				<input class="input input-bordered flex-grow" type="text" bind:value={search} />
 				<select class="select select-bordered flex-none" bind:value={version}>
@@ -98,16 +107,11 @@
 			</div>
 
 			<div class="flex justify-center">
-				<div class="prose mt-2 text-left">
-					{#if Array.isArray(returnValue)}
-						{#each returnValue as searchItem}
-							{@html marked(`### ${searchItem.reference} (${searchItem.referenceShort})`)}
-							{@html marked(`> ${searchItem.version} (${searchItem.versionShort})`)}
-							{@html marked(searchItem.content)}
-						{/each}
+				<div class="mt-2 text-left">
+					{#if data}
+						<Memorizer {data} />
 					{:else}
-						<pre
-							class="whitespace-pre-wrap"><code>{JSON.stringify(returnValue, null, 2)}</code></pre>
+						<pre class="whitespace-pre-wrap"><code>{error}</code></pre>
 					{/if}
 				</div>
 			</div>
