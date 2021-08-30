@@ -72,6 +72,7 @@ export async function get({ query }) {
       span.chapternum,
       a,
       div.long-aside,
+      div.short-aside,
       div.copyright-table
     `).remove();
 
@@ -127,9 +128,18 @@ export async function get({ query }) {
         $(el).text('**' + $(el).text() + '**');
       });
 
-      $('p.first-line-none', $(el)).each((i, el) => {
-        $(el).text('<br />' + $(el).text());
-      });
+      $('.speaker').closest('p').addClass('speakerP')
+
+      const allParagraphs = $('p', $(el))
+
+      allParagraphs.each((id, el) => {
+        if(!$(el).hasClass('speakerP')) return
+        if(!allParagraphs.eq(id + 1).length) return
+
+        if(allParagraphs.eq(id + 1).hasClass('first-line-none'))
+          allParagraphs.eq(id + 1).text('<br />' + allParagraphs.eq(id + 1).text())
+        else allParagraphs.eq(id + 1).addClass('speakerP')
+      })
 
       $('p', $(el)).each((i, el) => {
         $(el).text($(el).text().trim() + '\n\n');
