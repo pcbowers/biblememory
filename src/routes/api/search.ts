@@ -5,8 +5,9 @@ import BOOKS from './_books';
 const BASE_URL = `https://www.biblegateway.com/passage/?`;
 
 const sanitize = (str) => {
-	if (Array.isArray(str)) return str.map((st) => unidecode(st).replace(/\s+/g, ' ').trim());
-	return unidecode(str).replace(/\s+/g, ' ').trim();
+	// .replace(/\s+/g, ' ')
+	if (Array.isArray(str)) return str.map((st) => unidecode(st).trim());
+	return unidecode(str).trim();
 };
 
 const versesEqual = (prevVerse, curVerse) => {
@@ -18,6 +19,18 @@ const versesEqual = (prevVerse, curVerse) => {
 		return false;
 	return true;
 };
+
+const calculateShortReference = (parsedVerses) => {
+  const firstIndex = 0
+  const lastIndex = parsedVerses.length - 1
+  const firstRef = `${BOOKS[parsedVerses[firstIndex].book] || parsedVerses[firstIndex].book}.${parsedVerses[firstIndex].chapter}.${parsedVerses[firstIndex].verse}`
+  const lastRef = `-${BOOKS[parsedVerses[lastIndex].book] || parsedVerses[lastIndex].book}.${parsedVerses[lastIndex].chapter}.${parsedVerses[lastIndex].verse}`
+  if(firstIndex !== lastIndex) {
+    return firstRef + lastRef
+  }
+
+  return firstRef
+}
 
 export async function get({ query }) {
 	const searchTerm = encodeURIComponent(query.get('search'));
@@ -58,67 +71,102 @@ export async function get({ query }) {
       sup.versenum,
       span.chapternum,
       a,
-      div.long-aside
+      div.long-aside,
+      div.copyright-table
     `).remove();
 
-		$('i').each((i, el) => {
-			$(el).text('*' + $(el).text() + '*');
-		});
-
-		const shortReferenceSelector = $('.passage-table');
 		const referenceSelector = $('.bcv .dropdown-display-text');
 		const shortVersionSelector = $('.passage-col');
 		const versionSelector = $('.translation .dropdown-display-text');
-		const versesSelector = $('span.text:not([class="text"])');
 		const contentSelector = $('.passage-content');
 
-		const shortReference = shortReferenceSelector.map((id, el) => $(el).data('osis')).toArray();
-		const reference = referenceSelector.map((id, el) => $(el).text()).toArray();
-		const shortVersion = shortVersionSelector.map((id, el) => $(el).data('translation')).toArray();
-		const version = versionSelector.map((id, el) => $(el).text()).toArray();
-		const content = contentSelector.map((id, el) => $(el).text()).toArray();
+    const contents = [];
+    const verses = [];
+    const shortReferences = [];
 
-		versesSelector.removeClass('text');
+		contentSelector.each((id, el) => {
+			const versesSelector = $('span.text:not([class="text"])', $(el));
+			versesSelector.removeClass('text');
 
-		const mappedVerses = versesSelector.toArray().map((verseNode) => {
-			const [shortBook, chapter, verse, , , secondVerse] = $(verseNode).attr('class').split('-');
-			let toVerse;
+			const mappedVerses = versesSelector.toArray().map((verseNode) => {
+				const [shortBook, chapter, verse, , , secondVerse] = $(verseNode).attr('class').split('-');
+				let toVerse;
 
-			if (secondVerse) toVerse = Number(secondVerse);
+				if (secondVerse) toVerse = Number(secondVerse);
 
-			return {
-				book: BOOKS[shortBook] || shortBook,
-				chapter: Number(chapter),
-				verse: Number(verse),
-				toVerse,
-				text: sanitize($(verseNode).text())
-			};
+				return {
+					book: BOOKS[shortBook] || shortBook,
+					chapter: Number(chapter),
+					verse: Number(verse),
+					toVerse,
+					text: sanitize($(verseNode).text())
+				};
+			});
+
+			const parsedVerses = mappedVerses.reduce((prevVerses, curVerse, index) => {
+				if (index === 0) return [curVerse];
+
+				const prevVerse = prevVerses.pop();
+
+				if (versesEqual(prevVerse, curVerse)) {
+					curVerse.text = `${prevVerse.text} ${curVerse.text}`;
+					return [...prevVerses, curVerse];
+				}
+
+				return [...prevVerses, prevVerse, curVerse];
+			}, []);
+
+      verses.push(parsedVerses)
+      shortReferences.push(calculateShortReference(parsedVerses))
+
+      $('i', $(el)).each((i, el) => {
+        $(el).text('*' + $(el).text() + '*');
+      });
+
+      $('b', $(el)).each((i, el) => {
+        $(el).text('**' + $(el).text() + '**');
+      });
+
+      $('p.first-line-none', $(el)).each((i, el) => {
+        $(el).text('<br />' + $(el).text());
+      });
+
+      $('p', $(el)).each((i, el) => {
+        $(el).text($(el).text().trim() + '\n\n');
+      });
+
+      contents.push($(el).text())
 		});
-		const verses = mappedVerses.reduce((prevVerses, curVerse, index) => {
-			if (index === 0) return [curVerse];
 
-			const prevVerse = prevVerses.pop();
+		const references = referenceSelector.map((id, el) => $(el).text()).toArray();
+		const shortVersions = shortVersionSelector.map((id, el) => $(el).data('translation')).toArray();
+		const versions = versionSelector.map((id, el) => $(el).text()).toArray();
 
-			if (versesEqual(prevVerse, curVerse)) {
-				curVerse.text = `${prevVerse.text} ${curVerse.text}`;
-				return [...prevVerses, curVerse];
+    const sanitizedBody = {
+				searchTerm: decodeURIComponent(searchTerm),
+				searchVersion: decodeURIComponent(searchVersion),
+				referencesShort: sanitize(shortReferences),
+				references: sanitize(references),
+				versionsShort: sanitize(shortVersions),
+				versions: sanitize(versions),
+				contents: sanitize(contents),
+				verses: verses
 			}
 
-			return [...prevVerses, prevVerse, curVerse];
-		}, []);
+    const body = sanitizedBody.contents.map((content: string, id: number) => ({
+      searchTerm: sanitizedBody.searchTerm,
+      searchVersion: sanitizedBody.searchVersion,
+      referenceShort: sanitizedBody.referencesShort[id],
+      reference: sanitizedBody.references[id],
+      versionShort: sanitizedBody.versionsShort[id],
+      version: sanitizedBody.versions[id],
+      content: sanitizedBody.contents[id],
+      verses: sanitizedBody.verses[id],
+    }))
 
 		return {
 			status: 200,
-			body: {
-				searchTerm: decodeURIComponent(searchTerm),
-				searchVersion: decodeURIComponent(searchVersion),
-				shortReferences: sanitize(shortReference),
-				references: sanitize(reference),
-				shortVersions: sanitize(shortVersion),
-				versions: sanitize(version),
-				contents: sanitize(content),
-				verses
-			}
+			body
 		};
 	}
 

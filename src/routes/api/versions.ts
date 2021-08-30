@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 
-const EXCLUDED_VERSIONS = ["MOUNCE"]
+const EXCLUDED_VERSIONS = ["MOUNCE", "EXB"]
 
 export async function get({ query }) {
 	const searchVersion = query.get('version');
