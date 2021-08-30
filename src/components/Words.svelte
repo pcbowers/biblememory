@@ -22,7 +22,7 @@
 </svelte:head>
 
 <p>Coming Soon...</p>
-<div class="mockup-code max-w-[65ch]">
+<div class="mockup-code max-w-[min(65ch,90vw)]">
 	<Highlight language={javascript} data-prefix="$" code={'console.log(passage);'} />
 	{#each JSON.stringify(passage, null, 2).split('\n') as line, i}
 		<Highlight language={json} data-prefix={!i ? '$' : ''} code={line} />
