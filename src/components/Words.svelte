@@ -1,40 +1,100 @@
-<script>
-	import Highlight from 'svelte-highlight';
-	import json from 'svelte-highlight/src/languages/json';
-	import javascript from 'svelte-highlight/src/languages/javascript';
-	import atomOneDark from 'svelte-highlight/src/styles/atom-one-dark';
-	import { onMount } from 'svelte';
+<script type="ts">
+	import marked from 'marked';
 
 	export let passage;
 	export let verseByVerse;
+	export let currentVerse;
 
-	let blinkShow = true;
+	let correct = true;
+	let currentContent;
+	let currentWords = [];
+	let selectedWords = [];
+	let guess = [];
+	let forceReload = false;
 
-	onMount(() => {
-		const interval = setInterval(() => {
-			blinkShow = !blinkShow;
-		}, 530);
-	});
+	const randomColors = ['badge-primary', 'badge-secondary', 'badge-accent', ''];
+
+	const shuffleArray = (array, item = false) => {
+		let arr = item ? [item] : [];
+
+		return [
+			...arr,
+			...array
+				.map((value) => ({ value, sort: Math.random() }))
+				.sort((a, b) => a.sort - b.sort)
+				.map(({ value }) => value)
+		];
+	};
+
+	const cleanseArray = (array) => {
+		return array.map((value) => ({
+			punctuated: value,
+			unpunctuated: value.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/gi, '')
+		}));
+	};
+
+	const selectRandomColor = (currentWords) => {
+		if (currentWords.length) return randomColors[Math.floor(Math.random() * 4)];
+	};
+
+	$: {
+		if (verseByVerse) {
+			currentContent = passage.verses[currentVerse].text;
+		} else {
+			currentContent = passage.content;
+		}
+
+		currentWords = [];
+		selectedWords = [];
+		guess = [];
+		generateWords();
+	}
+
+	const generateWords = () => {
+		let words = currentContent.split(/\s+/);
+		currentWords = cleanseArray(words);
+		selectWords(10);
+	};
+
+	const selectWords = (max) => {
+		selectedWords = shuffleArray(
+			shuffleArray(currentWords.slice(1), currentWords[0]).slice(
+				0,
+				Math.min(max, currentWords.length)
+			)
+		).map((word) => {
+			if (word.unpunctuated.toLowerCase() === currentWords[0].unpunctuated.toLowerCase()) {
+				word.punctuated = currentWords[0].punctuated;
+				word.unpunctuated = currentWords[0].unpunctuated;
+			}
+			return word;
+		});
+	};
+
+	const addGuess = (word) => {
+		if (currentWords.length && currentWords[0].punctuated === word.punctuated) {
+			currentWords = currentWords.slice(1);
+		}
+
+		guess = [...guess, word];
+		selectWords(10);
+	};
 </script>
 
-<svelte:head>
-	{@html atomOneDark}
-</svelte:head>
-
-<p>Coming Soon...</p>
-<div class="mockup-code max-w-[min(65ch,90vw)]">
-	<Highlight language={javascript} data-prefix="$" code={'console.log(passage);'} />
-	{#each JSON.stringify(passage, null, 2).split('\n') as line, i}
-		<Highlight language={json} data-prefix={!i ? '$' : ''} code={line} />
-	{/each}
-
-	<pre data-prefix="$">
-    <code>{@html blinkShow ? "█" : "&nbsp;"}</code>
-  </pre>
+<p>{guess.map((word) => word.unpunctuated).join(' ')}</p>
+<div class="flex justify-center">
+	<div class="text-center w-1/2">
+		{#each selectedWords as word}
+			<div
+				class={`badge badge-lg cursor-pointer m-1 capitalize ${selectRandomColor(currentWords)}`}
+				on:click={() => {
+					addGuess(word);
+				}}
+			>
+				{word.unpunctuated}
+			</div>
+		{/each}
+	</div>
 </div>
 
-<style global lang="postcss">
-	.hljs {
-		@apply bg-transparent !important;
-	}
-</style>
+<p class="opacity-50">In Progress (No Check, No Save, No Undo, No editing # of words shown)...</p>
