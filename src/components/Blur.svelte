@@ -4,8 +4,8 @@
 	export let content;
 	export let wordCount;
 	export let showPassage;
-	export let inputText;
 
+	let inputText;
 	let words = [];
 	let displayedContent = '';
 	let correct = 'bg-base-200';
