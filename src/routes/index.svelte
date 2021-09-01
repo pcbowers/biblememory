@@ -40,9 +40,10 @@
 	import FAKE_DATA from './_fakeData';
 	export let versions: { version: string; shortVersion: string }[];
 
-	let search = 'Romans 1:1-12';
+	let search = '';
 	let version = 'ESV';
 	let error = 'Search for a Scripture and Select a Version.';
+	let errorTextCenter = true;
 	let data: {
 		searchTerm: string;
 		searchVersion: string;
@@ -62,10 +63,11 @@
 		}[];
 	}[];
 
-	let verseByVerse = false;
+	let verseByVerse = true;
 	let showPassage = false;
-	let activeTab = 'read';
-	let wordCount = 10;
+	let activeTab = 'words';
+	let wordCount = 5;
+	let wordPercentage = 20;
 	let passage = 0;
 	let currentVerse = 0;
 	let content;
@@ -93,6 +95,7 @@
 
 	const submitSearch = async () => {
 		error = '<button class="btn btn-lg btn-ghost btn-circle loading"></button>';
+		errorTextCenter = true;
 		if (dev) {
 			data = FAKE_DATA;
 		} else {
@@ -109,9 +112,11 @@
 				}
 				data = await res.json();
 				error = null;
+				errorTextCenter = true;
 			} catch (res) {
 				error = JSON.stringify(res, null, 2);
 				data = null;
+				errorTextCenter = false;
 			}
 		}
 	};
@@ -125,7 +130,12 @@
 	<div class="text-center hero-content">
 		<div class="max-w-[65ch] min-w-[min(65ch,90vw)]">
 			<div class="flex flex-row justify-center gap-4 flex-wrap">
-				<input class="input input-md input-bordered flex-grow" type="text" bind:value={search} />
+				<input
+					class="input input-md input-bordered flex-grow"
+					type="text"
+					bind:value={search}
+					placeholder="Romans 1:1-12"
+				/>
 				<select class="select select-md select-bordered flex-none" bind:value={version}>
 					{#each versions as vrsn}
 						<option value={vrsn.shortVersion}>{vrsn.shortVersion}</option>
@@ -147,12 +157,15 @@
 							{showPassage}
 							{activeTab}
 							{wordCount}
+							{wordPercentage}
 							{passage}
 							{currentVerse}
 							{content}
 						/>
 					{:else}
-						<pre class="whitespace-pre-wrap text-center"><code>{@html error}</code></pre>
+						<pre
+							class="whitespace-pre-wrap"
+							class:text-center={errorTextCenter}><code>{@html error}</code></pre>
 					{/if}
 				</div>
 			</div>

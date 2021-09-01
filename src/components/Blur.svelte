@@ -2,7 +2,7 @@
 	import marked from 'marked';
 
 	export let content;
-	export let wordCount;
+	export let wordPercentage;
 	export let showPassage;
 
 	let inputText;
@@ -48,7 +48,7 @@
 		displayedContent = text.replace(/(\w+\'\w+|\w+)/g, replacer);
 	};
 
-	$: generateBlurs(content, wordCount);
+	$: generateBlurs(content, wordPercentage);
 
 	const checkCorrect = (val) => {
 		const blurredWords = words.filter((word) => word.blurred);
@@ -91,7 +91,13 @@
 	>
 		{@html marked(displayedContent)}
 		<div class="ml-4 text-right">
-			<button class="btn btn-circle btn-sm" on:click={() => generateBlurs(content, wordCount)}>
+			<button
+				id="refresh"
+				class="btn btn-circle btn-sm"
+				on:click|stopPropagation={() => {
+					generateBlurs(content, wordPercentage);
+				}}
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="h-6 w-6"

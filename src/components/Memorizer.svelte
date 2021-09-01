@@ -25,6 +25,7 @@
 		}[];
 	}[];
 
+	export let wordPercentage = 20;
 	export let verseByVerse = false;
 	export let showPassage = false;
 	export let activeTab = 'read';
@@ -149,12 +150,12 @@
 					{/if}
 					{#if ['blur'].includes(activeTab)}
 						<label class="label gap-4">
-							<b class="label-text">Words Blurred ({wordCount}%)</b>
+							<b class="label-text">Words Blurred ({wordPercentage}%)</b>
 							<input
 								type="range"
 								max="100"
-								min="1"
-								bind:value={wordCount}
+								min="0"
+								bind:value={wordPercentage}
 								class="range range-secondary"
 							/>
 						</label>
@@ -193,7 +194,7 @@
 	{#if activeTab === 'read'}
 		<Read {content} verses={data[passage].verses} {verseByVerse} />
 	{:else if activeTab === 'blur'}
-		<Blur {content} {showPassage} {wordCount} />
+		<Blur {content} {showPassage} {wordPercentage} />
 	{:else if activeTab === 'words'}
 		<Words {content} {wordCount} />
 	{:else if activeTab === 'json'}
