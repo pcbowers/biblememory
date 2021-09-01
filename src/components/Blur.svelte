@@ -75,7 +75,7 @@
 </script>
 
 {#if !showPassage}
-	<textarea id="input" on:input={checkCorrect} class="sticky w-0 h-0 top-0" />
+	<textarea id="input" on:input={checkCorrect} class="sticky w-0 h-0 top-0" autofocus />
 	<section
 		class={`w-full -mt-4 relative p-2 mb-4 font-mono rounded-box prose ${correct}`}
 		on:click={() => document.getElementById('input').focus()}
