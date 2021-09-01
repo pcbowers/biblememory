@@ -4,6 +4,7 @@
 	export let content;
 	export let wordCount;
 	export let showPassage;
+	export let inputText;
 
 	let words = [];
 	let displayedContent = '';
@@ -71,11 +72,19 @@
 				correct = 'bg-base-200';
 			}, 500);
 		}
+
+		inputText = '';
 	};
 </script>
 
 {#if !showPassage}
-	<textarea id="input" on:input={checkCorrect} class="sticky w-0 h-0 top-0" autofocus />
+	<textarea
+		id="input"
+		bind:value={inputText}
+		on:input={checkCorrect}
+		class="sticky w-0 h-0 top-0"
+		autofocus
+	/>
 	<section
 		class={`w-full -mt-4 relative p-2 mb-4 font-mono rounded-box prose ${correct}`}
 		on:click={() => document.getElementById('input').focus()}
