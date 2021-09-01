@@ -59,7 +59,9 @@
 			words[blurredWords[0].index].blurred = false;
 			words = words;
 			document.getElementById(blurredWords[0].index).classList.remove('blur-sm');
-			correct = 'bg-success bg-opacity-50';
+			if (blurredWords.length === 1) {
+				correct = 'bg-success bg-opacity-50';
+			}
 		} else if (blurredWords.length && blurredWords[0].text) {
 			correct = 'bg-error bg-opacity-50';
 		}
