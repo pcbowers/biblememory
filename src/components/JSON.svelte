@@ -7,14 +7,31 @@
 
 	export let passage;
 	export let verseByVerse;
+	export let currentVerse;
 
 	let blinkShow = true;
+	let displayedPassage;
 
 	onMount(() => {
 		const interval = setInterval(() => {
 			blinkShow = !blinkShow;
 		}, 530);
 	});
+
+	$: {
+		if (verseByVerse) {
+			const { verses, ...copiedPassage } = JSON.parse(JSON.stringify(passage));
+			const verse = verses[currentVerse];
+			copiedPassage.searchTerm = verse.reference;
+			copiedPassage.content = verse.text;
+			copiedPassage.reference = verse.reference;
+			copiedPassage.referenceShort = verse.referenceShort;
+
+			displayedPassage = { ...copiedPassage, verses: [verse] };
+		} else {
+			displayedPassage = passage;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -23,7 +40,7 @@
 
 <div class="mockup-code max-w-[min(65ch,90vw)]">
 	<Highlight language={javascript} data-prefix="$" code={'console.log(passage);'} />
-	{#each JSON.stringify(passage, null, 2).split('\n') as line, i}
+	{#each JSON.stringify(displayedPassage, null, 2).split('\n') as line, i}
 		<Highlight language={json} data-prefix={!i ? '$' : ''} code={line} />
 	{/each}
 

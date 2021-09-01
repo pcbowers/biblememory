@@ -21,16 +21,20 @@ const versesEqual = (prevVerse, curVerse) => {
 };
 
 const calculateShortReference = (parsedVerses) => {
-  const firstIndex = 0
-  const lastIndex = parsedVerses.length - 1
-  const firstRef = `${BOOKS[parsedVerses[firstIndex].book] || parsedVerses[firstIndex].book}.${parsedVerses[firstIndex].chapter}.${parsedVerses[firstIndex].verse}`
-  const lastRef = `-${BOOKS[parsedVerses[lastIndex].book] || parsedVerses[lastIndex].book}.${parsedVerses[lastIndex].chapter}.${parsedVerses[lastIndex].verse}`
-  if(firstIndex !== lastIndex) {
-    return firstRef + lastRef
-  }
+	const firstIndex = 0;
+	const lastIndex = parsedVerses.length - 1;
+	const firstRef = `${BOOKS[parsedVerses[firstIndex].book] || parsedVerses[firstIndex].book}.${
+		parsedVerses[firstIndex].chapter
+	}.${parsedVerses[firstIndex].verse}`;
+	const lastRef = `-${BOOKS[parsedVerses[lastIndex].book] || parsedVerses[lastIndex].book}.${
+		parsedVerses[lastIndex].chapter
+	}.${parsedVerses[lastIndex].verse}`;
+	if (firstIndex !== lastIndex) {
+		return firstRef + lastRef;
+	}
 
-  return firstRef
-}
+	return firstRef;
+};
 
 export async function get({ query }) {
 	const searchTerm = encodeURIComponent(query.get('search'));
@@ -81,35 +85,35 @@ export async function get({ query }) {
 		const versionSelector = $('.translation .dropdown-display-text');
 		const contentSelector = $('.passage-content');
 
-    const contents = [];
-    const verses = [];
-    const shortReferences = [];
+		const contents = [];
+		const verses = [];
+		const shortReferences = [];
 
 		contentSelector.each((id, el) => {
 			// Sanitize Elements
-      $('i', $(el)).each((i, el) => {
-        $(el).text('*' + $(el).text() + '*');
-      });
+			$('i', $(el)).each((i, el) => {
+				$(el).text('*' + $(el).text() + '*');
+			});
 
-      $('b', $(el)).each((i, el) => {
-        $(el).text('**' + $(el).text() + '**');
-      });
+			$('b', $(el)).each((i, el) => {
+				$(el).text('**' + $(el).text() + '**');
+			});
 
-      $('.speaker').closest('p').addClass('speakerP')
+			$('.speaker').closest('p').addClass('speakerP');
 
-      const allParagraphs = $('p', $(el))
+			const allParagraphs = $('p', $(el));
 
-      allParagraphs.each((id, el) => {
-        if(!$(el).hasClass('speakerP')) return
-        if(!allParagraphs.eq(id + 1).length) return
+			allParagraphs.each((id, el) => {
+				if (!$(el).hasClass('speakerP')) return;
+				if (!allParagraphs.eq(id + 1).length) return;
 
-        if(allParagraphs.eq(id + 1).hasClass('first-line-none'))
-          allParagraphs.eq(id + 1).text('<br />' + allParagraphs.eq(id + 1).text())
-        else allParagraphs.eq(id + 1).addClass('speakerP')
-      })
+				if (allParagraphs.eq(id + 1).hasClass('first-line-none'))
+					allParagraphs.eq(id + 1).text('<br />' + allParagraphs.eq(id + 1).text());
+				else allParagraphs.eq(id + 1).addClass('speakerP');
+			});
 
-      // Select Verses
-      const versesSelector = $('span.text:not([class="text"])', $(el));
+			// Select Verses
+			const versesSelector = $('span.text:not([class="text"])', $(el));
 			versesSelector.removeClass('text');
 
 			const mappedVerses = versesSelector.toArray().map((verseNode) => {
@@ -118,11 +122,17 @@ export async function get({ query }) {
 
 				if (secondVerse) toVerse = Number(secondVerse);
 
+				const book = BOOKS[shortBook] || shortBook;
+
 				return {
-					book: BOOKS[shortBook] || shortBook,
+					book,
 					chapter: Number(chapter),
 					verse: Number(verse),
 					toVerse,
+					reference: `${book} ${chapter}:${verse}${toVerse ? `-${toVerse}` : ''}`,
+					referenceShort: `${shortBook}.${chapter}.${verse}${
+						toVerse ? `-${shortBook}.${chapter}.${toVerse}` : ''
+					}`,
 					text: sanitize($(verseNode).text())
 				};
 			});
@@ -140,42 +150,42 @@ export async function get({ query }) {
 				return [...prevVerses, prevVerse, curVerse];
 			}, []);
 
-      verses.push(parsedVerses)
-      shortReferences.push(calculateShortReference(parsedVerses))
+			verses.push(parsedVerses);
+			shortReferences.push(calculateShortReference(parsedVerses));
 
-      // Select Content
-      $('p', $(el)).each((i, el) => {
-        $(el).text($(el).text().trim() + '\n\n');
-      });
+			// Select Content
+			$('p', $(el)).each((i, el) => {
+				$(el).text($(el).text().trim() + '\n\n');
+			});
 
-      contents.push($(el).text())
+			contents.push($(el).text());
 		});
 
 		const references = referenceSelector.map((id, el) => $(el).text()).toArray();
 		const shortVersions = shortVersionSelector.map((id, el) => $(el).data('translation')).toArray();
 		const versions = versionSelector.map((id, el) => $(el).text()).toArray();
 
-    const sanitizedBody = {
-				searchTerm: decodeURIComponent(searchTerm),
-				searchVersion: decodeURIComponent(searchVersion),
-				referencesShort: sanitize(shortReferences),
-				references: sanitize(references),
-				versionsShort: sanitize(shortVersions),
-				versions: sanitize(versions),
-				contents: sanitize(contents),
-				verses: verses
-			}
+		const sanitizedBody = {
+			searchTerm: decodeURIComponent(searchTerm),
+			searchVersion: decodeURIComponent(searchVersion),
+			referencesShort: sanitize(shortReferences),
+			references: sanitize(references),
+			versionsShort: sanitize(shortVersions),
+			versions: sanitize(versions),
+			contents: sanitize(contents),
+			verses: verses
+		};
 
-    const body = sanitizedBody.contents.map((content: string, id: number) => ({
-      searchTerm: sanitizedBody.searchTerm,
-      searchVersion: sanitizedBody.searchVersion,
-      referenceShort: sanitizedBody.referencesShort[id],
-      reference: sanitizedBody.references[id],
-      versionShort: sanitizedBody.versionsShort[id],
-      version: sanitizedBody.versions[id],
-      content: sanitizedBody.contents[id],
-      verses: sanitizedBody.verses[id],
-    }))
+		const body = sanitizedBody.contents.map((content: string, id: number) => ({
+			searchTerm: sanitizedBody.searchTerm,
+			searchVersion: sanitizedBody.searchVersion,
+			referenceShort: sanitizedBody.referencesShort[id],
+			reference: sanitizedBody.references[id],
+			versionShort: sanitizedBody.versionsShort[id],
+			version: sanitizedBody.versions[id],
+			content: sanitizedBody.contents[id],
+			verses: sanitizedBody.verses[id]
+		}));
 
 		return {
 			status: 200,

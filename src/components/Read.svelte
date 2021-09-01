@@ -1,7 +1,8 @@
 <script>
 	import marked from 'marked';
 
-	export let passage;
+	export let content;
+	export let verses;
 	export let verseByVerse;
 </script>
 
@@ -14,7 +15,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each passage.verses as verse}
+			{#each verses as verse}
 				<tr>
 					<td>{verse.book} {verse.chapter}:{verse.verse}</td>
 					<td>{@html marked.parseInline(verse.text)}</td>
@@ -24,7 +25,7 @@
 	</table>
 {:else}
 	<div class="prose">
-		{@html marked(passage.content)}
+		{@html marked(content)}
 	</div>
 {/if}
 
