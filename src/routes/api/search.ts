@@ -1,11 +1,12 @@
 import unidecode from 'unidecode';
 import * as cheerio from 'cheerio';
 import BOOKS from './_books';
+import FAKE_PAGE from './_fakePage';
+import { dev } from '$app/env';
 
 const BASE_URL = `https://www.biblegateway.com/passage/?`;
 
 const sanitize = (str) => {
-	// .replace(/\s+/g, ' ')
 	if (Array.isArray(str)) return str.map((st) => unidecode(st.replace(/¶/g, '')).trim());
 	return unidecode(str.replace(/¶/g, '')).trim();
 };
@@ -18,6 +19,10 @@ const versesEqual = (prevVerse, curVerse) => {
 	)
 		return false;
 	return true;
+};
+
+const replacer = (match, p1, p2) => {
+	return p1 + p2.trim() + p1;
 };
 
 const calculateShortReference = (parsedVerses) => {
@@ -42,19 +47,27 @@ export async function get({ query }) {
 
 	if (searchVersion && searchTerm) {
 		const modifiedURL = `${BASE_URL}search=${searchTerm}&version=${searchVersion}`;
-		const res = await fetch(modifiedURL);
-
-		if (!res.ok) {
-			return {
-				status: res.status,
-				body: {
-					error: 'fetch failed. Bad internet?',
-					data: { searchTerm: query.get('search'), searchVersion: query.get('version') }
-				}
-			};
+		let text;
+		if (dev) {
+			text = FAKE_PAGE.text;
 		}
 
-		const $ = cheerio.load(await res.text());
+		if (!dev) {
+			const res = await fetch(modifiedURL);
+
+			if (!res.ok) {
+				return {
+					status: res.status,
+					body: {
+						error: 'fetch failed. Bad internet?',
+						data: { searchTerm: query.get('search'), searchVersion: query.get('version') }
+					}
+				};
+			}
+			text = await res.text();
+		}
+
+		const $ = cheerio.load(text);
 
 		if (!$('.bcv').length) {
 			return {
@@ -92,11 +105,11 @@ export async function get({ query }) {
 		contentSelector.each((id, el) => {
 			// Sanitize Elements
 			$('i', $(el)).each((i, el) => {
-				$(el).text('*' + $(el).text() + '*');
+				$(el).text('<em>' + $(el).text() + '</em>');
 			});
 
 			$('b', $(el)).each((i, el) => {
-				$(el).text('**' + $(el).text() + '**');
+				$(el).text('<strong>' + $(el).text() + '</strong>');
 			});
 
 			$('.speaker').closest('p').addClass('speakerP');
@@ -158,7 +171,17 @@ export async function get({ query }) {
 				$(el).text($(el).text().trim() + '\n\n');
 			});
 
-			contents.push($(el).text());
+			contents.push(
+				sanitize($(el).text())
+					.replace(/(?<=[.,])(?=[^\s\n)\]])/g, ' ')
+					.replace(/(?<=[\n]{2})[\s]+/g, '')
+					.replace(/[^\S\r\n]{2,}/g, ' ')
+					.replace(/\B(")(.+?)"\B/g, replacer)
+					.replace(/\B(')(.+?)'\B/g, replacer)
+					// .replace(/\B(\*\*)(?=[^*]{1})(.+?)(?<=[^*]{1})\*\*\B/g, replacer)
+					// .replace(/\*\*\*:/g, "* **:")
+          // .replace(/\B(?<=[^*]{1})(\*)(?=[^*]{1})(.+?)(?<=[^*]{1})\*\B/g, replacer)
+			);
 		});
 
 		const references = referenceSelector.map((id, el) => $(el).text()).toArray();
@@ -172,7 +195,7 @@ export async function get({ query }) {
 			references: sanitize(references),
 			versionsShort: sanitize(shortVersions),
 			versions: sanitize(versions),
-			contents: sanitize(contents),
+			contents: contents,
 			verses: verses
 		};
 

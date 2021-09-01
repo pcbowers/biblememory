@@ -46,7 +46,7 @@
 		guess = [];
 		correct = 'bg-base-200';
 		currentPosition = 0;
-		let words = str.split(/\s+/);
+		let words = str.match(/(?!\<|\<\/)(\b\w+\'\w+\b|\b\w+\b)(?![^\w]*\>)/g);
 		currentWords = cleanseArray(words);
 		selectWords(wordCount);
 	};

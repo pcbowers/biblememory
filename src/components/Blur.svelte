@@ -23,7 +23,7 @@
 	};
 
 	var curIndex = 0;
-	function replacer(match, p1, offset, string) {
+	function replacer(match, p1) {
 		const str = `<span id='${curIndex}' class='font-bold ${
 			words[curIndex].blurred ? 'blur-sm' : ''
 		}'>${p1}</span>`;
@@ -34,7 +34,7 @@
 
 	const generateBlurs = (text, percent) => {
 		correct = 'bg-base-200';
-		const allWords = text.match(/(\w+\'\w+|\w+)/g);
+		const allWords = text.match(/(?!\<|\<\/)(\b\w+\'\w+\b|\b\w+\b)(?![^\w]*\>)/g);
 		const blurredIndicies = shuffleArray(Array.from(Array(allWords.length).keys())).slice(
 			0,
 			Math.min(allWords.length, Math.ceil((allWords.length * percent) / 100))
@@ -45,7 +45,7 @@
 			blurred: blurredIndicies.includes(index)
 		}));
 		curIndex = 0;
-		displayedContent = text.replace(/(\w+\'\w+|\w+)/g, replacer);
+		displayedContent = text.replace(/(?!\<|\<\/)(\b\w+\'\w+\b|\b\w+\b)(?![^\w]*\>)/g, replacer);
 	};
 
 	$: generateBlurs(content, wordPercentage);

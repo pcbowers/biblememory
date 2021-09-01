@@ -12,6 +12,10 @@
 						{
 							shortVersion: 'MSG',
 							version: 'The Message'
+						},
+						{
+							shortVersion: 'VOICE',
+							version: 'The Voice'
 						}
 					]
 				}
@@ -94,11 +98,14 @@
 	};
 
 	const submitSearch = async () => {
+		if (error === '<button class="btn btn-lg btn-ghost btn-circle loading"></button>') return;
 		error = '<button class="btn btn-lg btn-ghost btn-circle loading"></button>';
 		errorTextCenter = true;
 		if (dev) {
 			data = FAKE_DATA;
-		} else {
+		}
+
+		if (!dev) {
 			try {
 				const res = await timeout(5000, fetch(`/api/search?search=${search}&version=${version}`));
 				if (!res.ok) {
@@ -129,7 +136,10 @@
 <div class="hero min-h-screen">
 	<div class="text-center hero-content">
 		<div class="max-w-[65ch] min-w-[min(65ch,90vw)]">
-			<div class="flex flex-row justify-center gap-4 flex-wrap">
+			<form
+				on:submit|preventDefault={submitSearch}
+				class="flex flex-row justify-center gap-4 flex-wrap"
+			>
 				<input
 					class="input input-md input-bordered flex-grow"
 					type="text"
@@ -146,7 +156,7 @@
 					class="btn btn-sm btn-primary flex-grow btn-block"
 					on:click|preventDefault={submitSearch}
 				/>
-			</div>
+			</form>
 
 			<div class="flex justify-center">
 				<div class="mt-2 text-left w-full">
