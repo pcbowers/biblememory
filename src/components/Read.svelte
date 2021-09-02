@@ -17,7 +17,10 @@
 		<tbody>
 			{#each verses as verse}
 				<tr>
-					<td>{verse.book} {verse.chapter}:{verse.verse}</td>
+					<td
+						>{verse.book}
+						{verse.chapter}:{verse.verse}{verse.toVerse ? `-${verse.toVerse}` : ''}</td
+					>
 					<td>{@html marked.parseInline(verse.text)}</td>
 				</tr>
 			{/each}
