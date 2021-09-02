@@ -33,6 +33,8 @@
 	export let passage = 0;
 	export let currentVerse = 0;
 	export let content;
+	export let useBlur = true;
+	export let hideAt100 = true;
 
 	const changeVerse = (action: 'inc' | 'dec') => {
 		switch (action) {
@@ -159,6 +161,14 @@
 								class="range range-secondary"
 							/>
 						</label>
+						<label class="cursor-pointer label gap-4">
+							<b class="label-text">Use Blur Effect</b>
+							<input type="checkbox" bind:checked={useBlur} class="toggle toggle-secondary" />
+						</label>
+						<label class="cursor-pointer label gap-4">
+							<b class="label-text">Hide Text at 100%</b>
+							<input type="checkbox" bind:checked={hideAt100} class="toggle toggle-secondary" />
+						</label>
 					{/if}
 				</div>
 			</div>
@@ -194,7 +204,7 @@
 	{#if activeTab === 'read'}
 		<Read {content} verses={data[passage].verses} {verseByVerse} />
 	{:else if activeTab === 'blur'}
-		<Blur {content} {showPassage} {wordPercentage} />
+		<Blur {content} {showPassage} {wordPercentage} {useBlur} {hideAt100} />
 	{:else if activeTab === 'words'}
 		<Words {content} {wordCount} />
 	{:else if activeTab === 'json'}

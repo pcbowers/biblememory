@@ -74,6 +74,8 @@
 	let wordPercentage = 20;
 	let passage = 0;
 	let currentVerse = 0;
+	let useBlur = true;
+	let hideAt100 = false;
 	let content;
 
 	const timeout = (ms, promise): Promise<Response> => {
@@ -171,6 +173,8 @@
 							{passage}
 							{currentVerse}
 							{content}
+							{useBlur}
+							{hideAt100}
 						/>
 					{:else}
 						<pre
