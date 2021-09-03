@@ -46,7 +46,7 @@
 
 	let search = '';
 	let version = 'ESV';
-	let error = 'Search for a Scripture and Select a Version.';
+	let error = 'Search for a Scripture and Select a Version.<br /><i>(Hint: Use commas to select multiple versions)</i>';
 	let errorTextCenter = true;
 	let data: {
 		searchTerm: string;
@@ -123,7 +123,7 @@
 				error = null;
 				errorTextCenter = true;
 			} catch (res) {
-				error = JSON.stringify(res, null, 2);
+				error = `<pre class="text-error whitespace-pre-wrap"><code>${JSON.stringify(res, null, 2)}</code></pre>`;
 				data = null;
 				errorTextCenter = false;
 			}
@@ -177,9 +177,7 @@
 							{hideAt100}
 						/>
 					{:else}
-						<pre
-							class="whitespace-pre-wrap"
-							class:text-center={errorTextCenter}><code>{@html error}</code></pre>
+						<div class:text-center={errorTextCenter}>{@html error}</div>
 					{/if}
 				</div>
 			</div>
